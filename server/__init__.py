@@ -13,12 +13,14 @@ class DockerTest(Resource):
 
     @access.user
     @loadmodel(map={'folderId': 'folder'}, model='folder', level=AccessType.WRITE)
+    @loadmodel(map={'itemId': 'item'}, model='item', level=AccessType.READ)
     @filtermodel('job', 'jobs')
     @describeRoute(
         Description('Test docker outputs.')
         .param('folderId', 'Where to write container outputs.')
+        .param('itemId', 'The input file.')
     )
-    def testOutputs(self, folder, params):
+    def testOutputs(self, folder, item, params):
         token = self.getCurrentToken()
 
         jobModel = self.model('job', 'jobs')
@@ -33,7 +35,12 @@ class DockerTest(Resource):
                 'mode': 'docker',
                 'docker_image': 'testoutputs:latest',
                 'pull_image': False,
-                'inputs': [],
+                'inputs': [{
+                    'id': 'input',
+                    'target': 'filepath',
+                    'format': 'text',
+                    'type': 'string'
+                }],
                 'outputs': [{
                     'id': 'out.txt',
                     'target': 'filepath',
@@ -41,12 +48,16 @@ class DockerTest(Resource):
                     'type': 'string'
                 }]
             },
-            'inputs': {},
+            'inputs': {
+                'input': utils.girderInputSpec(
+                    item, resourceType='item', token=token)
+            },
             'outputs': {
                 'out.txt': utils.girderOutputSpec(
                     folder, token)
             },
-            'jobInfo': utils.jobInfoSpec(job, jobToken)
+            'jobInfo': utils.jobInfoSpec(job, jobToken),
+            'cleanup': False
         }
         job['kwargs'] = kwargs
         job = jobModel.save(job)
