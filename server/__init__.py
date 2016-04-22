@@ -56,8 +56,7 @@ class DockerTest(Resource):
                 'out.txt': utils.girderOutputSpec(
                     folder, token)
             },
-            'jobInfo': utils.jobInfoSpec(job, jobToken),
-            'cleanup': False
+            'jobInfo': utils.jobInfoSpec(job, jobToken)
         }
         job['kwargs'] = kwargs
         job = jobModel.save(job)
