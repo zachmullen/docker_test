@@ -31,11 +31,11 @@ class DockerTest(Resource):
         kwargs = {
             'task': {
                 'mode': 'docker',
-                'docker_image': '85112f42475d',
+                'docker_image': 'testoutputs:latest',
                 'pull_image': False,
                 'inputs': [],
                 'outputs': [{
-                    'id': 'foo.txt',
+                    'id': 'out.txt',
                     'target': 'filepath',
                     'format': 'text',
                     'type': 'string'
@@ -43,7 +43,7 @@ class DockerTest(Resource):
             },
             'inputs': {},
             'outputs': {
-                'foo.txt': utils.girderOutputSpec(
+                'out.txt': utils.girderOutputSpec(
                     folder, token)
             },
             'jobInfo': utils.jobInfoSpec(job, jobToken)
