@@ -12,49 +12,43 @@ class DockerTest(Resource):
         self.route('POST', ('outputs',), self.testOutputs)
 
     @access.user
-    @loadmodel(map={'folderId': 'folder'}, model='folder', level=AccessType.WRITE)
-    @loadmodel(map={'itemId': 'item'}, model='item', level=AccessType.READ)
     @filtermodel('job', 'jobs')
     @describeRoute(
         Description('Test docker outputs.')
-        .param('folderId', 'Where to write container outputs.')
-        .param('itemId', 'The input file.')
     )
-    def testOutputs(self, folder, item, params):
+    def testOutputs(self, params):
         token = self.getCurrentToken()
 
         jobModel = self.model('job', 'jobs')
 
         job = jobModel.createJob(
-            title='docker output test: %s' % folder['name'], type='docker_test',
+            title='docker output stream test', type='docker_test',
             handler='worker_handler', user=self.getCurrentUser())
         jobToken = jobModel.createJobToken(job)
 
         kwargs = {
             'task': {
                 'mode': 'docker',
-                'docker_image': 'testoutputs:latest',
+                'docker_image': 'test/test:latest',
                 'pull_image': False,
-                'inputs': [{
-                    'id': 'input',
-                    'target': 'filepath',
-                    'format': 'text',
-                    'type': 'string'
-                }],
+                'inputs': [],
                 'outputs': [{
-                    'id': 'out.txt',
+                    'id': 'my_named_pipe',
                     'target': 'filepath',
                     'format': 'text',
+                    'stream': True,
                     'type': 'string'
                 }]
             },
-            'inputs': {
-                'input': utils.girderInputSpec(
-                    item, resourceType='item', token=token)
-            },
+            'inputs': {},
             'outputs': {
-                'out.txt': utils.girderOutputSpec(
-                    folder, token)
+                'my_named_pipe': {
+                    'mode': 'http',
+                    'url': 'http://localhost:8801',
+                    'method': 'POST',
+                    'format': 'text',
+                    'type': 'string',
+                }
             },
             'jobInfo': utils.jobInfoSpec(job, jobToken)
         }
