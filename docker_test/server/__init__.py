@@ -100,7 +100,8 @@ class DockerTest(Resource):
                 'my_named_pipe': {
                     'mode': 'http',
                     'method': 'POST',
-                    'url': getApiUrl() + '/docker_test/stream_callback'
+                    'url': getApiUrl() + '/docker_test/stream_callback',
+                    'headers': {'Girder-Token': str(token['_id'])}
                 }
             },
             'validate': False,
