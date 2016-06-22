@@ -86,7 +86,7 @@
         repo: git://github.com/girder/girder_worker.git
         dest: /home/vagrant/girder_worker
         accept_hostkey: yes
-        version: streaming-io
+        version: master
 
     - name: install girder_worker package
       command: chdir=/home/vagrant/girder_worker pip install -e .[docker]
