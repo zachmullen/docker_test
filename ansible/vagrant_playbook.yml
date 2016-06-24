@@ -86,7 +86,7 @@
         repo: git://github.com/girder/girder_worker.git
         dest: /home/vagrant/girder_worker
         accept_hostkey: yes
-        version: master
+        version: streaming-inputs
 
     - name: install girder_worker package
       command: chdir=/home/vagrant/girder_worker pip install -e .[docker]
@@ -157,6 +157,6 @@
       service: name=girder_worker state=restarted enabled=yes
       sudo: yes
 
-    - name: build docker image
-      command: chdir=/vagrant docker build -t testoutputs:latest .
-      sudo: yes
+    #- name: build docker image
+    #  command: chdir=/vagrant docker build -t testoutputs:latest .
+    #  sudo: yes

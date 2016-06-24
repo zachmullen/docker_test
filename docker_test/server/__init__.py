@@ -69,11 +69,13 @@ class DockerTest(Resource):
         return job
 
     @access.user
+    @loadmodel(map={'itemId': 'item'}, model='item', level=AccessType.READ)
     @filtermodel('job', 'jobs')
     @describeRoute(
-        Description('Test docker streaming output.')
+        Description('Test docker streaming IO.')
+        .param('itemId', 'The ID of the item to stream. CSV file works best.')
     )
-    def testStream(self, params):
+    def testStream(self, item, params):
         token = self.getCurrentToken()
 
         jobModel = self.model('job', 'jobs')
@@ -82,30 +84,47 @@ class DockerTest(Resource):
             title='docker stream test', type='docker_test',
             handler='worker_handler', user=self.getCurrentUser())
         jobToken = jobModel.createJobToken(job)
+        apiUrl = getApiUrl()
 
         kwargs = {
             'task': {
                 'mode': 'docker',
                 'docker_image': 'testoutputs:latest',
                 'pull_image': False,
-                'inputs': [],
+                'inputs': [{
+                    'id': 'input_pipe',
+                    'target': 'filepath',
+                    'stream': True
+                }],
                 'outputs': [{
-                    'id': 'my_named_pipe',
+                    'id': 'output_pipe',
                     'target': 'filepath',
                     'stream': True
                 }]
             },
-            'inputs': {},
+            'inputs': {
+                'input_pipe': {
+                    'mode': 'http',
+                    'method': 'GET',
+                    'url': '%s/item/%s/download' % (apiUrl, str(item['_id'])),
+                    'headers': {
+                        'Girder-Token': str(token['_id'])
+                    }
+                }
+            },
             'outputs': {
-                'my_named_pipe': {
+                'output_pipe': {
                     'mode': 'http',
                     'method': 'POST',
-                    'url': getApiUrl() + '/docker_test/stream_callback',
-                    'headers': {'Girder-Token': str(token['_id'])}
+                    'url': apiUrl + '/docker_test/stream_callback',
+                    'headers': {
+                        'Girder-Token': str(token['_id'])
+                    }
                 }
             },
             'validate': False,
             'auto_convert': False,
+            'cleanup': False,
             'jobInfo': utils.jobInfoSpec(job, jobToken)
         }
         job['kwargs'] = kwargs

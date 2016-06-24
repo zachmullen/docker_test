@@ -1,11 +1,13 @@
-import random
-import string
 import time
 
-with open('/mnt/girder_worker/data/my_named_pipe', 'wb') as fd:
-    for i in range(15):
-        fd.write(''.join(random.choice(string.ascii_letters + string.digits)
-                 for x in range(random.randint(20, 100))))
-        fd.flush()
-        time.sleep(2)
+ip = '/mnt/girder_worker/data/input_pipe'
+op = '/mnt/girder_worker/data/output_pipe'
 
+# Reads lines from the input pipe, reverses them, then writes them to the output pipe.
+# Sleeps for a short duration between each line.
+with open(ip, 'r') as ifd, open(op, 'w') as ofd:
+    for line in ifd:
+        ofd.write(line[::-1])
+        ofd.flush()
+        time.sleep(0.4)
+print '\nALL DONE!!'
