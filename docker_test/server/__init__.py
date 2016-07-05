@@ -15,6 +15,7 @@ class DockerTest(Resource):
         #self.route('POST', ('outputs',), self.testOutputs)
         self.route('POST', ('stream',), self.testStream)
         self.route('POST', ('stream_callback',), self.streamUpload)
+        self.route('POST', ('fetch_parent',), self.testFetchParent)
 
     @access.user
     @loadmodel(map={'folderId': 'folder'}, model='folder', level=AccessType.WRITE)
@@ -144,6 +145,46 @@ class DockerTest(Resource):
             note, state=ProgressState.SUCCESS,
             expires=datetime.datetime.utcnow() + datetime.timedelta(seconds=10))
 
+    @access.user
+    @loadmodel(map={'fileId': 'file'}, model='file', level=AccessType.READ)
+    @filtermodel('job', 'jobs')
+    @describeRoute(
+        Description('Test fetching of parent item.')
+        .param('fileId', 'The ID of the file.')
+    )
+    def testFetchParent(self, file, params):
+        token = self.getCurrentToken()
+
+        jobModel = self.model('job', 'jobs')
+
+        job = jobModel.createJob(
+            title='Parent fetch test', type='parent_fetch_test',
+            handler='worker_handler', user=self.getCurrentUser())
+        jobToken = jobModel.createJobToken(job)
+
+        kwargs = {
+            'task': {
+                'mode': 'python',
+                'script': 'print(fp)\n',
+                'inputs': [{
+                    'id': 'fp',
+                    'target': 'filepath'
+                }],
+                'outputs': []
+            },
+            'inputs': {
+                'fp': utils.girderInputSpec(file, token=token, fetchParent=True)
+            },
+            'outputs': {},
+            'validate': False,
+            'auto_convert': False,
+            'cleanup': False,
+            'jobInfo': utils.jobInfoSpec(job, jobToken)
+        }
+        job['kwargs'] = kwargs
+        job = jobModel.save(job)
+        jobModel.scheduleJob(job)
+        return job
 
 def load(info):
     info['apiRoot'].docker_test = DockerTest()
