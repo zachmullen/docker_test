@@ -168,7 +168,9 @@ class DockerTest(Resource):
                 'script': 'print(fp)\n',
                 'inputs': [{
                     'id': 'fp',
-                    'target': 'filepath'
+                    'target': 'filepath',
+                    'format': 'text',
+                    'type': 'string'
                 }],
                 'outputs': []
             },
